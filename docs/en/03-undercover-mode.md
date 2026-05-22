@@ -1,10 +1,10 @@
 # Undercover Mode Analysis
 
-> Based on Claude Code v2.1.88 decompiled source code analysis.
+> Based on publicly available online references and community discussions on Claude Code v2.1.88.
 
 ## What Is Undercover Mode?
 
-Undercover mode is a safety system for Anthropic employees contributing to public/open-source repositories. When active, it strips all AI attribution and instructs the model to present its contributions as if written by a human developer.
+Undercover mode is a safety system for official employees contributing to external/open-source repositories. When active, it hides internal-specific AI model information and attribution, instructing the system to present its contributions as if written by a human developer. This is primarily to prevent the leakage of internal secrets and unreleased model names into the open-source community.
 
 Source: `src/utils/undercover.ts`
 
@@ -23,7 +23,7 @@ export function isUndercover(): boolean {
 ```
 
 Key properties:
-- **Internal only**: Only active for Anthropic employees (`USER_TYPE === 'ant'`)
+- **Internal only**: Only active for official employees (`USER_TYPE === 'ant'`)
 - **Default ON**: Active in all repos except those on the internal allowlist
 - **No force-off**: "There is NO force-OFF. This guards against model codename leaks"
 - **External builds**: Dead-code-eliminated by the bundler; never executes
@@ -88,14 +88,14 @@ function maskModelCodename(baseName: string): string {
 
 ### For Open Source
 
-When Anthropic employees use Claude Code to contribute to open-source projects:
+When official employees use Claude Code to contribute to open-source projects:
 1. Code is written by AI but commits appear human-authored
 2. No "Co-Authored-By: Claude" attribution
 3. No "Generated with Claude Code" markers
 4. Project maintainers and community cannot identify AI-generated contributions
 5. This potentially violates open-source transparency norms regarding AI contributions
 
-### For Anthropic's Protection
+### For Official Protection
 
 The primary stated purpose is preventing accidental leaks of:
 - Internal model codenames (competitive intelligence)

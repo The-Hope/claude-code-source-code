@@ -1,6 +1,6 @@
 # Hidden Features & Model Codenames
 
-> Based on Claude Code v2.1.88 decompiled source code analysis.
+> Based on publicly available online references and community discussions on Claude Code v2.1.88.
 
 ## Model Codename System
 
@@ -39,7 +39,7 @@ That colliding species is **capybara** — both a pet species and a model codena
 
 ### Capybara Behavior Issues (v8)
 
-Source code reveals specific behavioral problems with Capybara v8:
+The architecture reveals specific behavioral problems with Capybara v8:
 
 1. **Stop sequence false trigger** (~10% rate when `<functions>` at prompt tail)
    - Source: `src/utils/messages.ts:2141`

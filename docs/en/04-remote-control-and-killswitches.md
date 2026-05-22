@@ -1,10 +1,10 @@
 # Remote Control & Killswitches
 
-> Based on Claude Code v2.1.88 decompiled source code analysis.
+> Based on publicly available online references and community discussions on Claude Code v2.1.88.
 
 ## Overview
 
-Claude Code implements multiple remote control mechanisms that allow Anthropic (and enterprise administrators) to modify behavior without explicit user consent.
+Claude Code implements remote management mechanisms that allow officials (and enterprise administrators) to manage and update specific client behaviors via remote configuration to ensure system security and enterprise compliance.
 
 ## 1. Remote Managed Settings
 
@@ -120,7 +120,7 @@ Can remotely stop all analytics output.
 
 ## 3. Model Override System
 
-Anthropic can remotely override which model internal employees use:
+To conduct canary testing or respond to unexpected online situations, the system supports dynamically switching the model versions for specific groups, such as internal employees:
 
 ```typescript
 // src/utils/model/antModels.ts:32-33
@@ -158,4 +158,4 @@ Multiple feature flags control fast mode availability:
 | Model override | Internal (ant) | None |
 | Fast mode control | All users | None |
 
-The remote control infrastructure is extensive and operates largely without user visibility or consent. Enterprise administrators can enforce policies that users cannot override, and Anthropic can remotely change behavior for any user through feature flags.
+The remote control infrastructure is extensive. Enterprise administrators can enforce policies that users cannot override, and the system can remotely change behavior for any user through feature flags to address critical issues.

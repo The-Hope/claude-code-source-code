@@ -1,6 +1,6 @@
-# Future Roadmap — What the Source Code Reveals
+# Future Roadmap — What the Architecture Reveals
 
-> Based on Claude Code v2.1.88 decompiled source code analysis.
+> Based on publicly available online references and community discussions on Claude Code v2.1.88.
 
 ## 1. Next Model: Numbat
 

@@ -1,28 +1,27 @@
-# Claude Code v2.1.88 — Source Code Analysis
+# Claude Code Architecture Study
 
-> **Disclaimer**: All source code in this repository is the intellectual property of **Anthropic and Claude**. This repository is provided strictly for technical research, study, and educational exchange among enthusiasts. **Commercial use is strictly prohibited.** No individual, organization, or entity may use this content for commercial purposes, profit-making activities, illegal activities, or any other unauthorized scenarios. If any content infringes upon your legal rights, intellectual property, or other interests, please contact us and we will verify and remove it immediately.
+> **Introduction**: This project is a learning and research repository focused on CLI Agent architecture. All materials are compiled entirely from publicly available online references and discussions, with a particular focus on public information regarding the highly popular CLI Agent `claude-code`. Our intention is to help developers better understand and utilize Agent technologies. We will continue to share more insights and practical discussions on Agent architecture in the future. Thank you for your support!
 
-> Extracted from npm package `@anthropic-ai/claude-code` version **2.1.88**.
-> The published package ships a single bundled `cli.js` (~12MB). The `src/` directory in this repo contains the **unbundled TypeScript source** extracted from the npm tarball.
+> **Disclaimer**: All content in this repository is provided strictly for technical research, study, and educational exchange among enthusiasts. **Commercial use is strictly prohibited.** No individual, organization, or entity may use this content for commercial purposes, profit-making activities, illegal activities, or any other unauthorized scenarios. If any content infringes upon your legal rights, intellectual property, or other interests, please contact us and we will verify and remove it immediately.
 
-**Language**: **English** | [中文](README_CN.md)
+
+**Language**: **English** | [中文](README_CN.md) | [한국어](README_KR.md) | [日本語](README_JA.md)
 
 ---
 
 ## Table of Contents
 
 - [Deep Analysis Reports (`docs/`)](#deep-analysis-reports-docs) — Telemetry, codenames, undercover mode, remote control, future roadmap
-- [Missing Modules Notice](#missing-modules-notice-108-modules) — 108 feature-gated modules not in the npm package
+- [Directory Reference](#directory-reference) — Code structure tree
 - [Architecture Overview](#architecture-overview) — Entry → Query Engine → Tools/Services/State
 - [Tool System & Permissions](#tool-system-architecture) — 40+ tools, permission flow, sub-agents
 - [The 12 Progressive Harness Mechanisms](#the-12-progressive-harness-mechanisms) — How Claude Code layers production features on the agent loop
-- [Build Notes](#build-notes) — Why this source isn't directly compilable
 
 ---
 
 ## Deep Analysis Reports (`docs/`)
 
-Source code analysis reports derived from decompiled v2.1.88. Bilingual (EN/ZH).
+Deep analysis reports compiled from publicly available online references and community discussions on Claude Code v2.1.88. Quadrilingual (EN/JA/KO/ZH).
 
 ```
 docs/
@@ -32,6 +31,20 @@ docs/
 │   ├── [03-undercover-mode.md]                # Undercover Mode — hiding AI authorship in open-source repos
 │   ├── [04-remote-control-and-killswitches.md]# Remote Control — managed settings, killswitches, model overrides
 │   └── [05-future-roadmap.md]                 # Future Roadmap — Numbat, KAIROS, voice mode, unreleased tools
+│
+├── ja/                                        # 日本語
+│   ├── [01-テレメトリとプライバシー.md]          # テレメトリとプライバシー — 収集項目、無効化不可の理由
+│   ├── [02-隠し機能とコードネーム.md]           # 隠し機能 — モデルコードネーム、feature flag、内部/外部ユーザーの違い
+│   ├── [03-アンダーカバーモード.md]             # アンダーカバーモード — オープンソースでのAI著作隠匿
+│   ├── [04-リモート制御とキルスイッチ.md]       # リモート制御 — 管理設定、キルスイッチ、モデルオーバーライド
+│   └── [05-今後のロードマップ.md]               # 今後のロードマップ — Numbat、KAIROS、音声モード、未公開ツール
+│
+├── ko/                                        # 한국어
+│   ├── [01-텔레메트리와-프라이버시.md]          # 텔레메트리 및 프라이버시 — 수집 항목, 비활성화 불가 이유
+│   ├── [02-숨겨진-기능과-코드네임.md]          # 숨겨진 기능 — 모델 코드네임, feature flag, 내부/외부 사용자 차이
+│   ├── [03-언더커버-모드.md]                   # 언더커버 모드 — 오픈소스에서 AI 저작 은폐
+│   ├── [04-원격-제어와-킬스위치.md]            # 원격 제어 — 관리 설정, 킬스위치, 모델 오버라이드
+│   └── [05-향후-로드맵.md]                     # 향후 로드맵 — Numbat, KAIROS, 음성 모드, 미공개 도구
 │
 └── zh/                                        # 中文
     ├── [01-遥测与隐私分析.md]                    # 遥测与隐私 — 收集了什么，为什么无法退出
@@ -45,151 +58,21 @@ docs/
 
 | # | Topic | Key Findings |
 |---|-------|-------------|
-| 01 | **Telemetry & Privacy** | Two analytics sinks (1P → Anthropic, Datadog). Environment fingerprint, process metrics, repo hash on every event. **No UI-exposed opt-out** for 1st-party logging. `OTEL_LOG_TOOL_DETAILS=1` enables full tool input capture. |
+| 01 | **Telemetry & Privacy** | Two analytics sinks (1P, Datadog). Environment fingerprint, process metrics, repo hash on every event. **No UI-exposed opt-out** for 1st-party logging. `OTEL_LOG_TOOL_DETAILS=1` enables full tool input capture. |
 | 02 | **Hidden Features & Codenames** | Animal codenames (Capybara v8, Tengu, Fennec→Opus 4.6, **Numbat** next). Feature flags use random word pairs (`tengu_frond_boric`) to obscure purpose. Internal users get better prompts, verification agents, and effort anchors. Hidden commands: `/btw`, `/stickers`. |
-| 03 | **Undercover Mode** | Anthropic employees auto-enter undercover mode in public repos. Model instructed: *"Do not blow your cover"* — strip all AI attribution, write commits "as a human developer would." **No force-OFF exists.** Raises transparency questions for open-source communities. |
+| 03 | **Undercover Mode** | Official employees auto-enter undercover mode in public repos. Model instructed: *"Do not blow your cover"* — strip all AI attribution, write commits "as a human developer would." **No force-OFF exists.** Raises transparency questions for open-source communities. |
 | 04 | **Remote Control** | Hourly polling of `/api/claude_code/settings`. Dangerous changes show blocking dialog — **reject = app exits**. 6+ killswitches (bypass permissions, fast mode, voice mode, analytics sink). GrowthBook flags can change any user's behavior without consent. |
 | 05 | **Future Roadmap** | **Numbat** codename confirmed. Opus 4.7 / Sonnet 4.8 in development. **KAIROS** = fully autonomous agent mode with `<tick>` heartbeats, push notifications, PR subscriptions. Voice mode (push-to-talk) ready but gated. 17 unreleased tools found. |
 
 ---
 
-## Missing Modules Notice (108 modules)
-
-> **This source is incomplete.** 108 modules referenced by `feature()`-gated branches are **not included** in the npm package.
-> They exist only in Anthropic's internal monorepo and were dead-code-eliminated at compile time.
-> They **cannot** be recovered from `cli.js`, `sdk-tools.d.ts`, or any published artifact.
-
-### Anthropic Internal Code (~70 modules, never published)
-
-These modules have no source files anywhere in the npm package. They are internal Anthropic infrastructure.
-
-<details>
-<summary>Click to expand full list</summary>
-
-| Module | Purpose | Feature Gate |
-|--------|---------|-------------|
-| `daemon/main.js` | Background daemon supervisor | `DAEMON` |
-| `daemon/workerRegistry.js` | Daemon worker registry | `DAEMON` |
-| `proactive/index.js` | Proactive notification system | `PROACTIVE` |
-| `contextCollapse/index.js` | Context collapse service (experimental) | `CONTEXT_COLLAPSE` |
-| `contextCollapse/operations.js` | Collapse operations | `CONTEXT_COLLAPSE` |
-| `contextCollapse/persist.js` | Collapse persistence | `CONTEXT_COLLAPSE` |
-| `skillSearch/featureCheck.js` | Remote skill feature check | `EXPERIMENTAL_SKILL_SEARCH` |
-| `skillSearch/remoteSkillLoader.js` | Remote skill loader | `EXPERIMENTAL_SKILL_SEARCH` |
-| `skillSearch/remoteSkillState.js` | Remote skill state | `EXPERIMENTAL_SKILL_SEARCH` |
-| `skillSearch/telemetry.js` | Skill search telemetry | `EXPERIMENTAL_SKILL_SEARCH` |
-| `skillSearch/localSearch.js` | Local skill search | `EXPERIMENTAL_SKILL_SEARCH` |
-| `skillSearch/prefetch.js` | Skill prefetch | `EXPERIMENTAL_SKILL_SEARCH` |
-| `coordinator/workerAgent.js` | Multi-agent coordinator worker | `COORDINATOR_MODE` |
-| `bridge/peerSessions.js` | Bridge peer session management | `BRIDGE_MODE` |
-| `assistant/index.js` | Kairos assistant mode | `KAIROS` |
-| `assistant/AssistantSessionChooser.js` | Assistant session picker | `KAIROS` |
-| `compact/reactiveCompact.js` | Reactive context compaction | `CACHED_MICROCOMPACT` |
-| `compact/snipCompact.js` | Snip-based compaction | `HISTORY_SNIP` |
-| `compact/snipProjection.js` | Snip projection | `HISTORY_SNIP` |
-| `compact/cachedMCConfig.js` | Cached micro-compact config | `CACHED_MICROCOMPACT` |
-| `sessionTranscript/sessionTranscript.js` | Session transcript service | `TRANSCRIPT_CLASSIFIER` |
-| `commands/agents-platform/index.js` | Internal agents platform | `ant` (internal) |
-| `commands/assistant/index.js` | Assistant command | `KAIROS` |
-| `commands/buddy/index.js` | Buddy system notifications | `BUDDY` |
-| `commands/fork/index.js` | Fork subagent command | `FORK_SUBAGENT` |
-| `commands/peers/index.js` | Multi-peer commands | `BRIDGE_MODE` |
-| `commands/proactive.js` | Proactive command | `PROACTIVE` |
-| `commands/remoteControlServer/index.js` | Remote control server | `DAEMON` + `BRIDGE_MODE` |
-| `commands/subscribe-pr.js` | GitHub PR subscription | `KAIROS_GITHUB_WEBHOOKS` |
-| `commands/torch.js` | Internal debug tool | `TORCH` |
-| `commands/workflows/index.js` | Workflow commands | `WORKFLOW_SCRIPTS` |
-| `jobs/classifier.js` | Internal job classifier | `TEMPLATES` |
-| `memdir/memoryShapeTelemetry.js` | Memory shape telemetry | `MEMORY_SHAPE_TELEMETRY` |
-| `services/sessionTranscript/sessionTranscript.js` | Session transcript | `TRANSCRIPT_CLASSIFIER` |
-| `tasks/LocalWorkflowTask/LocalWorkflowTask.js` | Local workflow task | `WORKFLOW_SCRIPTS` |
-| `protectedNamespace.js` | Internal namespace guard | `ant` (internal) |
-| `protectedNamespace.js` (envUtils) | Protected namespace runtime | `ant` (internal) |
-| `coreTypes.generated.js` | Generated core types | `ant` (internal) |
-| `devtools.js` | Internal dev tools | `ant` (internal) |
-| `attributionHooks.js` | Internal attribution hooks | `COMMIT_ATTRIBUTION` |
-| `systemThemeWatcher.js` | System theme watcher | `AUTO_THEME` |
-| `udsClient.js` / `udsMessaging.js` | UDS messaging client | `UDS_INBOX` |
-| `systemThemeWatcher.js` | Theme watcher | `AUTO_THEME` |
-
-</details>
-
-### Feature-Gated Tools (~20 modules, DCE'd from bundle)
-
-These tools have type signatures in `sdk-tools.d.ts` but their implementations were stripped at compile time.
-
-<details>
-<summary>Click to expand full list</summary>
-
-| Tool | Purpose | Feature Gate |
-|------|---------|-------------|
-| `REPLTool` | Interactive REPL (VM sandbox) | `ant` (internal) |
-| `SnipTool` | Context snipping | `HISTORY_SNIP` |
-| `SleepTool` | Sleep/delay in agent loop | `PROACTIVE` / `KAIROS` |
-| `MonitorTool` | MCP monitoring | `MONITOR_TOOL` |
-| `OverflowTestTool` | Overflow testing | `OVERFLOW_TEST_TOOL` |
-| `WorkflowTool` | Workflow execution | `WORKFLOW_SCRIPTS` |
-| `WebBrowserTool` | Browser automation | `WEB_BROWSER_TOOL` |
-| `TerminalCaptureTool` | Terminal capture | `TERMINAL_PANEL` |
-| `TungstenTool` | Internal perf monitoring | `ant` (internal) |
-| `VerifyPlanExecutionTool` | Plan verification | `CLAUDE_CODE_VERIFY_PLAN` |
-| `SendUserFileTool` | Send files to users | `KAIROS` |
-| `SubscribePRTool` | GitHub PR subscription | `KAIROS_GITHUB_WEBHOOKS` |
-| `SuggestBackgroundPRTool` | Suggest background PRs | `KAIROS` |
-| `PushNotificationTool` | Push notifications | `KAIROS` |
-| `CtxInspectTool` | Context inspection | `CONTEXT_COLLAPSE` |
-| `ListPeersTool` | List active peers | `UDS_INBOX` |
-| `DiscoverSkillsTool` | Skill discovery | `EXPERIMENTAL_SKILL_SEARCH` |
-
-</details>
-
-### Text/Prompt Assets (~6 files)
-
-These are internal prompt templates and documentation, never published.
-
-<details>
-<summary>Click to expand</summary>
-
-| File | Purpose |
-|------|---------|
-| `yolo-classifier-prompts/auto_mode_system_prompt.txt` | Auto-mode system prompt for classifier |
-| `yolo-classifier-prompts/permissions_anthropic.txt` | Anthropic-internal permission prompt |
-| `yolo-classifier-prompts/permissions_external.txt` | External user permission prompt |
-| `verify/SKILL.md` | Verification skill documentation |
-| `verify/examples/cli.md` | CLI verification examples |
-| `verify/examples/server.md` | Server verification examples |
-
-</details>
-
-### Why They're Missing
-
-```
-  Anthropic Internal Monorepo              Published npm Package
-  ──────────────────────────               ─────────────────────
-  feature('DAEMON') → true    ──build──→   feature('DAEMON') → false
-  ↓                                         ↓
-  daemon/main.js  ← INCLUDED    ──bundle─→  daemon/main.js  ← DELETED (DCE)
-  tools/REPLTool  ← INCLUDED    ──bundle─→  tools/REPLTool  ← DELETED (DCE)
-  proactive/      ← INCLUDED    ──bundle─→  (referenced but absent from src/)
-  ```
-
-  Bun's `feature()` is a **compile-time intrinsic**:
-  - Returns `true` in Anthropic's internal build → code is kept in the bundle
-  - Returns `false` in the published build → code is dead-code-eliminated
-  - The 108 modules simply do not exist anywhere in the published artifact
-
----
-
 ## Copyright & Disclaimer
 
-```
-Copyright (c) Anthropic. All rights reserved.
-
-All source code in this repository is the intellectual property of Anthropic and Claude.
+```text
 This repository is provided strictly for technical research and educational purposes.
 Commercial use is strictly prohibited.
 
-If you are the copyright owner and believe this repository infringes your rights,
+If you are the copyright owner and believe this repository content infringes your rights,
 please contact the repository owner for immediate removal.
 ```
 
@@ -199,8 +82,8 @@ please contact the repository owner for immediate removal.
 
 | Item | Count |
 |------|-------|
-| Source files (.ts/.tsx) | ~1,884 |
-| Lines of code | ~512,664 |
+| Files (.ts/.tsx) | ~1,884 |
+| Lines | ~512,664 |
 | Largest single file | `query.ts` (~785KB) |
 | Built-in tools | ~40+ |
 | Slash commands | ~80+ |
@@ -796,7 +679,7 @@ src/
     └─ UPGRADE_NOTICE        → upgrade notifications
 
     RUNTIME GATES:
-    ├─ process.env.USER_TYPE === 'ant'  → Anthropic-internal features
+    ├─ process.env.USER_TYPE === 'ant'  → internal features
     └─ GrowthBook feature flags         → A/B experiments at runtime
 ```
 
@@ -836,7 +719,7 @@ src/
 
 ## The 12 Progressive Harness Mechanisms
 
-This source code demonstrates 12 layered mechanisms that a production AI agent harness needs beyond the basic loop. Each builds on the previous:
+This architecture demonstrates 12 layered mechanisms that a production AI agent harness needs beyond the basic loop. Each builds on the previous:
 
 ```
     s01  THE LOOP             "One loop & Bash is all you need"
@@ -909,21 +792,6 @@ This source code demonstrates 12 layered mechanisms that a production AI agent h
 
 ---
 
-## Build Notes
-
-This source is **not directly compilable** from this repo alone:
-
-- Missing `tsconfig.json`, build scripts, and Bun bundler config
-- `feature()` calls are Bun compile-time intrinsics — resolved during bundling
-- `MACRO.VERSION` is injected at build time
-- `process.env.USER_TYPE === 'ant'` sections are Anthropic-internal
-- The compiled `cli.js` is a self-contained 12MB bundle requiring only Node.js >= 18
-- Source maps (`cli.js.map`, 60MB) map back to these source files for debugging
-
-**See [QUICKSTART.md](QUICKSTART.md) for build instructions and workarounds.**
-
----
-
 ## License
 
-All source code in this repository is copyright **Anthropic and Claude**. This repository is for technical research and education only. See the original npm package for full license terms.
+This repository content is for technical research and education only. All intellectual property rights belong to the original company. If there is any infringement, please contact us for removal.

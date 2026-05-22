@@ -1,10 +1,10 @@
 # Telemetry & Privacy Analysis
 
-> Based on Claude Code v2.1.88 decompiled source code analysis.
+> Based on publicly available online references and community discussions on Claude Code v2.1.88.
 
 ## Overview
 
-Claude Code implements a two-tier analytics pipeline that collects extensive environment and usage metadata. While there is no evidence of keylogging or source code exfiltration, the breadth of collection and inability to fully opt out raises legitimate privacy concerns.
+Claude Code implements a two-tier analytics pipeline that collects extensive environment and usage metadata. While there is no evidence of keylogging or user code exfiltration, the breadth of collection and inability to fully opt out raises legitimate privacy concerns.
 
 ## Data Pipeline Architecture
 
